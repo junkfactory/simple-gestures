@@ -342,16 +342,20 @@ async function grantPermissions() {
 }
 
 async function checkHostPermissions() {
-  let permissions = await browser.permissions.getAll();
+  const permissions = await browser.permissions.getAll();
   console.debug("Permissions", permissions);
-  let askPermission = $("#askPermission");
-  let configUi = $("#configUi");
+  const askPermission = $("#askPermission");
+  const configUi = $("#configUi, #configStatus");
   if (permissions.origins.includes("<all_urls>")) {
     askPermission.style.display = "none";
-    configUi.style.display = "block";
+    configUi.forEach((c) => {
+      c.style.display = "block";
+    });
   } else {
     askPermission.style.display = "block";
-    configUi.style.display = "none";
+    configUi.forEach((c) => {
+      c.style.display = "none";
+    });
   }
 }
 
