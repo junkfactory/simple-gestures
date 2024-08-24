@@ -21,10 +21,12 @@
 
 //Adapter for chromium based browsers
 
-var browser = {
-  storage: chrome.storage,
-  runtime: chrome.runtime,
-  action: chrome.action,
-  tabs: chrome.tabs,
-  permissions: chrome.permissions,
-};
+if (chrome !== undefined) {
+  var browser = {
+    storage: chrome.storage,
+    runtime: chrome.runtime,
+    action: chrome.action,
+    tabs: chrome.tabs,
+    permissions: chrome.permissions,
+  };
+}
