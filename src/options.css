@@ -1,10 +1,16 @@
 body {
-  width: 370px;
   background-color: #29292e;
   color: white;
   border: 1px solid #000;
   margin: 0px;
-  padding: 10px;
+}
+
+h1 {
+  margin: 10px 10px 0px 10px;
+}
+
+p {
+  margin-bottom: 0.7em;
 }
 
 table {
@@ -58,6 +64,10 @@ input:focus.error {
   outline: none;
 }
 
+input.gesture {
+  width: 100px;
+}
+
 a.addremove {
   font-weight: bold;
   color: #fff;
@@ -73,6 +83,7 @@ a:hover,
 a:visited,
 a:active {
   text-decoration: none;
+  color: #98b9fa;
 }
 
 a:hover.addremove,
@@ -120,8 +131,38 @@ form > div {
   margin-bottom: 10px;
 }
 
+#domain_container {
+  margin: 10px 0;
+}
+
 #domain_url {
   font-weight: bold;
   color: #ff8c00;
 }
 
+.configUrl,
+.configExtras,
+.configGeneral {
+  width: 500px;
+}
+
+#configUi {
+  overflow: auto;
+  padding: 10px 10px 50px 10px;
+}
+
+#configStatus {
+  position: fixed;
+  bottom: 0;
+  margin: 0;
+  padding: 15px;
+  z-index: 10;
+  border-top: 1px solid #999;
+  width: 100%;
+  background: #000;
+}
+
+table,
+.extra {
+  width: 100%;
+}

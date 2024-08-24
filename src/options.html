@@ -1,136 +1,202 @@
 <!-- 
 /*   
- *  Copyright (C) 2013  AJ Ribeiro
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>
+// The MIT License (MIT)
+// ----------------------------------------------
+//
+// Copyright © 2024 junkfactory@gmail.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of 
+// this software and associated documentation files (the “Software”), to deal in 
+// the Software without restriction, including without limitation the rights to use, 
+// copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the 
+// Software, and to permit persons to whom the Software is furnished to do so, 
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all 
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR 
+// A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR 
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISINt FROM, OUT OF OR IN CONNECTION WITH 
+// THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */ 
 -->
 
-<html>
+<!doctype html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>SimpleGestures Options</title>
-    <link rel="stylesheet" href="options.css" />
+    <link href="options.css" rel="stylesheet" type="text/css" />
   </head>
-
-  <h1>
-    <img class="logo" src="resources/app_icon.png" />SimpleGestures
-    Configuration
-  </h1>
-  <p>Use mouse right button to hold and drag to activate a gesture.</p>
-  <p class="note">
-    Note: Valid gesture values are U (up), D (down), L (left), R (right)
-  </p>
-
   <body>
+    <h1>
+      <img class="logo" src="resources/app_icon.png" />SimpleGestures
+      Configuration
+    </h1>
+    <div id="askPermission">
+      <p>
+        SimpleGestures is missing "Access your data for all websites" permission
+        in order to perform mouse gesture commands. Note that no data is
+        actually collected.
+      </p>
+      <p>
+        Firefox requires users to manually grant this permission to extensions.
+        You can request it by clicking on the button below and then click Allow
+        when Firefox asks you to deny or allow.
+      </p>
+      <p class="note">
+        After granting permission, you may need to reload existing tabs for
+        gestures to function properly.
+      </p>
+      <button id="grantPermissions">Request all hosts permissions</button>
+      <p>
+        <a href="https://github.com/philc/vimium/wiki/Permissions">See here</a>
+        for more info about this permission.
+      </p>
+    </div>
     <form id="option_form">
-      <div id="domain_container">
-        <label for="domain">
-          Enabled on <span id="domain_url">www.example.com</span>
-          <input type="checkbox" id="domain" /> <span class="beta">(Beta)</span>
-        </label>
-      </div>
-      <input
-        type="radio"
-        name="tabs"
-        id="configGeneral"
-        checked
-        class="config"
-      />
-      <label for="configGeneral">General</label>
-      <input type="radio" name="tabs" id="configUrl" class="config" />
-      <label for="configUrl"> Custom Urls </label>
-      <div class="tab configGeneral">
-        <table id="optsTab">
-          <tr>
-            <td><label for="trail">Show Gesture Trails:</label></td>
-            <td>
-              <input type="checkbox" id="trail" class="config" />
-            </td>
-          </tr>
-
-          <tr>
-            <td>Gesture Color:</td>
-            <td>
-              <select id="color" class="config">
-                <option value="red" selected>red</option>
-                <option value="green">green</option>
-                <option value="blue">blue</option>
-                <option value="yellow">yellow</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td>Gesture Width:</td>
-            <td>
-              <select id="width" class="config">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3" selected>3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-              </select>
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr>
-            <td><label for="rockerEnabled">Enable rocker gesture:</label></td>
-            <td><input type="checkbox" id="rockerEnabled" class="config" /></td>
-          </tr>
-          <tr>
-            <td colspan="2" class="note">
-              Hold left mouse button then click right to go to next tab. Hold
-              right mouse button then click left for previous tab.
-            </td>
-          </tr>
-          <tr>
-            <td colspan="2">&nbsp;</td>
-          </tr>
-          <tr class="header">
-            <th>Action</th>
-            <th>Gesture</th>
-          </tr>
-        </table>
+      <div id="configUi">
+        <p>Use mouse right button to hold and drag to activate a gesture.</p>
         <p class="note">
-          If "Open New Tab" is assigned, right click + drag on a link will open
-          that link.
+          Note: Valid gesture values are U (up), D (down), L (left), R (right)
         </p>
+        <div id="domain_container">
+          <label for="domain">
+            Enabled on <span id="domain_url">www.example.com</span>
+            <input type="checkbox" id="domain" />
+          </label>
+        </div>
+        <input
+          type="radio"
+          name="tabs"
+          id="configGeneral"
+          checked
+          class="config"
+        />
+        <label for="configGeneral">General</label>
+        <input type="radio" name="tabs" id="configUrl" class="config" />
+        <label for="configUrl"> Custom Urls </label>
+        <input type="radio" name="tabs" id="configExtras" class="config" />
+        <label for="configExtras"> Extras <span class="beta">beta</span></label>
+        <div class="tab configGeneral">
+          <table id="optsTab">
+            <tr>
+              <td><label for="trail">Show Gesture Trails:</label></td>
+              <td>
+                <input type="checkbox" id="trail" class="config" />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Gesture Color:</td>
+              <td>
+                <select id="color" class="config">
+                  <option value="red" selected>red</option>
+                  <option value="green">green</option>
+                  <option value="blue">blue</option>
+                  <option value="yellow">yellow</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td>Gesture Width:</td>
+              <td>
+                <select id="width" class="config">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3" selected>3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td><label for="rockerEnabled">Enable rocker gesture:</label></td>
+              <td>
+                <input type="checkbox" id="rockerEnabled" class="config" />
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2" class="note">
+                Hold left mouse button then click right to go to next tab. Hold
+                right mouse button then click left for previous tab.
+              </td>
+            </tr>
+            <tr>
+              <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr class="header">
+              <th>Action</th>
+              <th>Gesture</th>
+            </tr>
+          </table>
+          <p class="note">
+            If "Open New Tab" is assigned, right click + drag on a link will
+            open that link.
+          </p>
+          <p class="note">
+            To disable a gesture, leave the gesture field empty.
+          </p>
+        </div>
+        <div class="tab configUrl">
+          <table id="customUrlTab">
+            <tr>
+              <td colspan="3" class="note">
+                Click on plus (+) to assign gestures to open urls in a new tab
+              </td>
+            </tr>
+            <tr class="header">
+              <th>Url (http/https)</th>
+              <th>Gesture</th>
+              <th style="width: 10px">
+                <a
+                  id="plus"
+                  href="#"
+                  title="Click to add new custom url"
+                  class="addremove"
+                  >+</a
+                >
+              </th>
+            </tr>
+          </table>
+        </div>
+        <div class="tab configExtras">
+          <p class="note">
+            These are patterns for the next and previous page links. Required
+            with next/previous page gestures. (i.e. google results has named the
+            next page link with "Next")
+          </p>
+          <table id="extraConfigTab">
+            <tr>
+              <th>Next page patterns</th>
+              <td>
+                <input
+                  type="text"
+                  name="nextPatterns"
+                  class="extra"
+                  value="next,more results,more,newer,>,›,→,»,≫,>>"
+                />
+              </td>
+            </tr>
+            <tr>
+              <th>Previos page patterns</th>
+              <td>
+                <input
+                  type="text"
+                  name="prevPatterns"
+                  class="extra"
+                  value="prev,previous,back,older,<,‹,←,«,≪,<<"
+                />
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
-      <div class="tab configUrl">
-        <table id="customUrlTab">
-          <tr>
-            <td colspan="3" class="note">
-              Click on plus (+) to assign gestures to open urls in a new tab
-            </td>
-          </tr>
-          <tr class="header">
-            <th>Url (http/https)</th>
-            <th>Gesture</th>
-            <th style="width: 10px">
-              <a
-                id="plus"
-                href="#"
-                title="Click to add new custom url"
-                class="addremove"
-                >+</a
-              >
-            </th>
-          </tr>
-        </table>
-      </div>
-      <div>
+      <div id="configStatus">
         <input type="submit" value="Save configuration" />
         <div id="status"></div>
       </div>

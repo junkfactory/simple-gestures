@@ -4,6 +4,8 @@ const Actions = {
   NewTab: "newtab",
   NextTab: "nexttab",
   PrevTab: "prevtab",
+  NextPage: "nextpage",
+  PrevPage: "prevpage",
 };
 
 class Coords {
@@ -43,11 +45,13 @@ class SimpleGesture {
   #coords;
   #link;
   #canvas;
+  #dom;
 
   constructor() {
     this.config = new Config();
     this.#coords = new Coords();
     this.#canvas = new Canvas(this.config);
+    this.#dom = new Dom();
   }
 
   start(event) {
@@ -62,7 +66,25 @@ class SimpleGesture {
     this.#currentGesture = "";
     this.#previousGesture = "";
     this.moved = false;
-    this.#link = this.#determineLink(event.target, 10);
+    this.#link = this.#dom.determineLink(event.target, 10);
+  }
+
+  nextPage() {
+    const nextPatterns = "next,more results,more,newer,>,›,→,»,≫,>>";
+    const nextStrings = nextPatterns.split(",").filter((s) => s.trim().length);
+    return (
+      this.#dom.findAndFollowRel("next") ||
+      this.#dom.findAndFollowLink(nextStrings)
+    );
+  }
+
+  prevPage() {
+    const prevPatterns = "prev,previous,back,older,<,‹,←,«,≪,<<";
+    const prevStrings = prevPatterns.split(",").filter((s) => s.trim().length);
+    return (
+      this.#dom.findAndFollowRel("prev") ||
+      this.#dom.findAndFollowLink(prevStrings)
+    );
   }
 
   move(event) {
@@ -119,25 +141,24 @@ class SimpleGesture {
         this.#link = action;
         action = Actions.NewTab;
       }
-      browser.runtime
-        .sendMessage({ msg: action, url: this.#link })
-        .then((result) => {
-          if (result != null) {
-            this.#link = null;
-          }
-        })
-        .catch((error) => console.error(`Failed to send ${action}`, error));
+      switch (action) {
+        case Actions.NextPage:
+          this.nextPage();
+          break;
+        case Actions.PrevPage:
+          this.prevPage();
+          break;
+        default:
+          browser.runtime
+            .sendMessage({ msg: action, url: this.#link })
+            .then((result) => {
+              if (result != null) {
+                this.#link = null;
+              }
+            })
+            .catch((error) => console.error(`Failed to send ${action}`, error));
+      }
     }
-  }
-
-  #determineLink(target, allowedDrillCount) {
-    if (target.href) {
-      return target.href;
-    }
-    if (target.parentElement && allowedDrillCount > 0) {
-      return this.#determineLink(target.parentElement, allowedDrillCount - 1);
-    }
-    return null;
   }
 
   #watch() {

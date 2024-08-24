@@ -26,4 +26,5 @@ var browser = {
   runtime: chrome.runtime,
   action: chrome.action,
   tabs: chrome.tabs,
+  permissions: chrome.permissions,
 };

@@ -21,6 +21,7 @@
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 const IGNORE_DOMAIN = "IGNORE_DOMAIN";
+const VALID_GESTURES = /^[DULR]*$/;
 
 const colorNameToCode = {
   red: "ff3300",
@@ -44,6 +45,8 @@ const commandMapping = {
   "Reload (bypass cache)": "reload",
   "Open New Tab": "newtab",
   "Close Current Tab": "closetab",
+  "Next Page": "nextpage",
+  "Previous Page": "prevpage",
 };
 
 function switchTab(tabId) {
@@ -166,10 +169,12 @@ function validateConfiguration(optionForm) {
       case "gvalue":
         if (definedGestures.indexOf(gval) > -1) {
           displayError(i, "Duplicate gesture defined.");
-        } else if (gval == "" || !VALID_GESTURES.test(gval)) {
+        } else if (!VALID_GESTURES.test(gval)) {
           displayError(i, "Invalid gesture pattern!");
         } else {
-          definedGestures.push(gval);
+          if (gval.trim().length > 0) {
+            definedGestures.push(gval);
+          }
         }
         break;
     }
@@ -185,7 +190,8 @@ async function saveConfiguration(e) {
   }
   let store = await browser.storage.local.get("simple_gestures_config");
   console.log("storage", store);
-  let config = store?.simple_gestures_config || { gestures: {} };
+  let config = store?.simple_gestures_config || { gestures: {}, extras: {} };
+  config.extras = config?.extras || {};
   console.debug("config", config);
 
   let select = $("#color");
@@ -214,18 +220,25 @@ async function saveConfiguration(e) {
 
   let url = null;
   for (const i of $("#option_form input")) {
-    if (url == null && i.name == "url") {
-      url = i.value;
-    } else if (url != null && i.name == "gvalue") {
-      config.gestures[i.value] = url;
+    const val = i.value.trim();
+    if (url == null && i.name === "url") {
+      url = val;
+    } else if (url != null && i.name === "gvalue") {
+      config.gestures[val] = url;
       url = null;
-    } else {
+    } else if (i.name === "gvalue") {
       const s = i.parentElement.parentElement.children[0].textContent;
-      if (i.value.length > 0) {
-        config.gestures[commandMapping[s]] = i.value;
+      if (val.length > 0) {
+        config.gestures[commandMapping[s]] = val;
       } else {
         delete config.gestures[commandMapping[s]];
       }
+    } else if (i.name === "nextPatterns") {
+      console.debug("nextPatterns", val);
+      config.extras.nextPatterns = val;
+    } else if (i.name === "prevPatterns") {
+      console.debug("prevPatterns", val);
+      config.extras.prevPatterns = val;
     }
   }
   await browser.storage.local.set({ simple_gestures_config: config });
@@ -305,10 +318,45 @@ function restoreOptions() {
       createOptions(config);
       extensionToggle({ target: domainCheckbox });
     });
+
+    //set extra options
+    if (config?.extras) {
+      if (config.extras?.nextPatterns) {
+        var nextPage = $("#option_form input[name='nextPatterns']");
+        nextPage.value = config.extras.nextPatterns;
+      }
+      if (config.extras?.prevPatterns) {
+        var prevPage = $("#option_form input[name='prevPatterns']");
+        prevPage.value = config.extras.prevPatterns;
+      }
+    }
   });
 }
 
+async function grantPermissions() {
+  let result = await browser.permissions.request({ origins: ["<all_urls>"] });
+  console.debug("Permission result", result);
+  if (result) {
+    await checkHostPermissions();
+  }
+}
+
+async function checkHostPermissions() {
+  let permissions = await browser.permissions.getAll();
+  console.debug("Permissions", permissions);
+  let askPermission = $("#askPermission");
+  let configUi = $("#configUi");
+  if (permissions.origins.includes("<all_urls>")) {
+    askPermission.style.display = "none";
+    configUi.style.display = "block";
+  } else {
+    askPermission.style.display = "block";
+    configUi.style.display = "none";
+  }
+}
+
 $().addEventListener("DOMContentLoaded", function () {
+  checkHostPermissions();
   browser.action.setBadgeText({ text: "" });
   restoreOptions();
   const tabNav = $("input[name=tabs]");
@@ -321,4 +369,5 @@ $().addEventListener("DOMContentLoaded", function () {
     addCustomUrl();
   });
   $("#domain").addEventListener("click", extensionToggle);
+  $("#grantPermissions").addEventListener("click", grantPermissions);
 });
