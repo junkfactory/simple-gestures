@@ -70,7 +70,9 @@ class SimpleGesture {
   }
 
   nextPage() {
-    const nextPatterns = "next,more results,more,newer,>,›,→,»,≫,>>";
+    const nextPatterns =
+      this.config?.extras?.nextPatterns ||
+      "next,more results,more,newer,>,›,→,»,≫,>>";
     const nextStrings = nextPatterns.split(",").filter((s) => s.trim().length);
     return (
       this.#dom.findAndFollowRel("next") ||
@@ -79,7 +81,9 @@ class SimpleGesture {
   }
 
   prevPage() {
-    const prevPatterns = "prev,previous,back,older,<,‹,←,«,≪,<<";
+    const prevPatterns =
+      this.config?.extras?.prevPatterns ||
+      "prev,previous,back,older,<,‹,←,«,≪,<<";
     const prevStrings = prevPatterns.split(",").filter((s) => s.trim().length);
     return (
       this.#dom.findAndFollowRel("prev") ||

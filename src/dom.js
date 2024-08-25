@@ -5,19 +5,16 @@ class Dom {
     this.#mouse = new Mouse();
   }
 
-  #isLink(linkElement) {
+  #isLinkRef(linkElement) {
     if (linkElement.nodeName.toLowerCase() === "link") {
       return true;
     }
 
-    if (linkElement.nodeName.toLowerCase() === "a" && linkElement?.href) {
-      return true;
-    }
     return false;
   }
 
   #followLink(linkElement) {
-    if (this.#isLink(linkElement)) {
+    if (this.#isLinkRef(linkElement)) {
       window.location.href = linkElement.href;
     } else {
       //for javascript based links
