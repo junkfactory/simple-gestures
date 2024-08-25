@@ -34,7 +34,9 @@ const config = {
     back: "L",
     newtab: "U",
     closetab: "D",
-    reload: "DR",
+    reload: "DRU",
+    nextpage: "DR",
+    prevpage: "DL",
   },
   extras: {
     nextPatterns: "next,more results,more,newer,>,›,→,»,≫,>>",
