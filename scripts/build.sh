@@ -28,4 +28,4 @@ for browser in "${BROWSERS[@]}"; do
     zip -r "${PKG}" *.json src/*
 done
 
-gh release create ${GITHUB_REF_NAME} "./*.zip" --generate-notes
+gh release create ${GITHUB_REF_NAME} ./*.zip --generate-notes
