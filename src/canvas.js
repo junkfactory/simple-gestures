@@ -40,8 +40,8 @@ class Canvas {
       document.body.appendChild(canvas);
     }
 
-    let vw = window.visualViewport.width - window.screenX;
-    let vh = window.visualViewport.height - window.screenY;
+    const vw = window.visualViewport.width - window.screenX;
+    const vh = window.visualViewport.height - window.screenY;
 
     const canvas_top = window.visualViewport.pageTop + "px";
     canvas.style.width = vw;
