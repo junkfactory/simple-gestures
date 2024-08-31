@@ -31,7 +31,7 @@ const Direction = {
 class EdgeGestures {
   #config;
   #active = false;
-  #threshold = 0.1;
+  #threshold = 0.15;
   #scroller;
 
   constructor(config) {
@@ -39,9 +39,41 @@ class EdgeGestures {
     this.#scroller = new Scroller();
   }
 
+  #calculateJump({ pos, max, direction, threshold }) {
+    const step = 50;
+    const quarter = threshold / 4;
+    if (direction === Direction.TOP || direction === Direction.LEFT) {
+      if (pos < max + quarter) {
+        return step << 4;
+      } else if (pos < max + quarter * 2) {
+        return step << 3;
+      } else if (pos < max + quarter * 3) {
+        return step << 2;
+      } else {
+        return step << 1;
+      }
+    } else {
+      console.debug(
+        `pos: ${pos}, max: ${max}, q1: ${max + quarter}, q2: ${max + quarter * 2}, q3: ${max + quarter * 3}`,
+      );
+      if (pos > max + quarter * 3) {
+        return step << 4;
+      } else if (pos > max + quarter * 2) {
+        return step << 3;
+      } else if (pos > max + quarter) {
+        return step << 2;
+      } else {
+        return step << 1;
+      }
+    }
+  }
+
   toggle() {
     const active = !this.#active;
     console.debug("EdgeGestures active: ", active);
+    // if (!active) {
+    //   this.#scroller.stop(Direction.ANY);
+    // }
     this.#active = active;
   }
 
@@ -51,9 +83,7 @@ class EdgeGestures {
     }
     const vw = window.visualViewport.width - window.screenX;
     const vh = window.visualViewport.height - window.screenY;
-    let scrollValue = 50;
     const thresholdValue = vh * this.#threshold;
-    const thresholdValueHalf = thresholdValue / 2;
     const x = event.clientX;
     const y = event.clientY;
     const edgeArea = {
@@ -63,35 +93,49 @@ class EdgeGestures {
       right: x > vw * (1 - this.#threshold),
     };
     if (edgeArea.top) {
-      this.#scroller.startScroll({
-        scrollValue,
-        direction: Direction.TOP,
+      const d = Direction.TOP;
+      const jump = this.#calculateJump({
+        pos: y,
+        max: 0,
+        threshold: thresholdValue,
+        direction: d,
+      });
+      console.debug("top", { x, y, vw, vh, thresholdValue, jump });
+      this.#scroller.start({
+        direction: d,
         x: 0,
-        y: -10,
+        y: -jump,
       });
     } else if (edgeArea.right) {
-      this.#scroller.startScroll({
-        scrollValue,
+      this.#scroller.start({
         direction: Direction.RIGHT,
         x: 10,
         y: 0,
       });
     } else if (edgeArea.bottom) {
-      this.#scroller.startScroll({
-        scrollValue,
+      const d = Direction.BOTTOM;
+      const jump = this.#calculateJump({
+        pos: y,
+        max: vh - thresholdValue,
+        threshold: thresholdValue,
+        direction: d,
+      });
+      console.debug(
+        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
+      );
+      this.#scroller.start({
         direction: Direction.BOTTOM,
         x: 0,
-        y: 10,
+        y: jump,
       });
     } else if (edgeArea.left) {
-      this.#scroller.startScroll({
-        scrollValue,
+      this.#scroller.start({
         direction: Direction.LEFT,
         x: -10,
         y: 0,
       });
     } else {
-      this.#scroller.stopScroll(Direction.ANY);
+      this.#scroller.stop(Direction.ANY);
     }
     return true;
   }

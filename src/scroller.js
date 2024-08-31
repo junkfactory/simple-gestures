@@ -21,40 +21,54 @@
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class Scroller {
-  #state = {
-    scrollId: false,
-    direction: null,
-  };
+  static #DEFAULT_SCROLL_SPEED = 2500;
+  #state;
+
+  constructor() {
+    this.#state = {
+      scrollId: false,
+      direction: null,
+      x: 0,
+      y: 0,
+    };
+  }
 
   #currentScrollingElement() {
     return document.scrollingElement;
   }
 
-  startScroll({ scrollValue, direction, x, y }) {
-    const state = this.#state;
-    if (state.scrollId) {
-      return;
+  start({ direction, x, y }) {
+    if (this.stop({ direction })) {
+      const scrollingElement = this.#currentScrollingElement();
+      const state = this.#state;
+      scrollingElement.scrollBy({ left: x, top: y, behavior: "smooth" });
+      state.direction = direction;
+      state.x = x;
+      state.y = y;
+      state.scrollId = setInterval(
+        (edge) => {
+          console.debug("edge", edge);
+          scrollingElement.scrollBy({ left: x, top: y, behavior: "smooth" });
+        },
+        Scroller.#DEFAULT_SCROLL_SPEED,
+        state,
+      );
+      console.debug(`start scroll ${direction}`, this.#state);
     }
-    this.stopScroll(direction);
-    const scrollingElement = this.#currentScrollingElement();
-    state.direction = direction;
-    state.scrollId = setInterval(
-      () => {
-        scrollingElement.scrollBy({ left: x, top: y, behavior: "smooth" });
-      },
-      scrollValue,
-      this,
-    );
-    console.debug("EdgeGestures startScroll", state);
   }
 
-  stopScroll({ direction }) {
+  stop({ direction, x, y }) {
     const state = this.#state;
-    if (state.scrollId && state.direction !== direction) {
-      console.debug("EdgeGestures stopScroll");
+    if (
+      state.scrollId &&
+      (state.direction !== direction || state.x !== x || state.y !== y)
+    ) {
+      console.debug(`stop scroll ${direction}`, this);
       clearInterval(state.scrollId);
       state.scrollId = false;
       state.direction = null;
+      return true;
     }
+    return state.scrollId === false;
   }
 }
