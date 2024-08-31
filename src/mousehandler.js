@@ -104,7 +104,7 @@ class MouseHandler {
     this.#rmouseDown = false;
     //always remove canvas on mouse up
     this.#gesture.stop();
-    return false;
+    return true;
   }
 
   #mouseDown(event) {
