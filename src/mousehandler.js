@@ -20,18 +20,20 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-console.debug = () => {};
+// console.debug = () => {};
 
 class MouseHandler {
   #gesture;
+  #edgeGesture;
   #rmouseDown = false;
   #currentElement = null;
   #suppress = 1;
   #elementFromPoint;
   #elementMouseDown;
 
-  constructor(gesture) {
+  constructor({ gesture, edgeGesture }) {
     this.#gesture = gesture;
+    this.#edgeGesture = edgeGesture;
     this.#elementMouseDown = this.#mouseDown.bind(this);
   }
 
@@ -59,9 +61,31 @@ class MouseHandler {
     return true;
   }
 
+  #watchCurrentElement(event) {
+    const currentElement = this.#elementFromPoint(event.clientX, event.clientY);
+    if (currentElement) {
+      //track the mouse if we are holding the right button
+      if (currentElement !== this.#currentElement) {
+        if (this.#currentElement) {
+          this.#currentElement.removeEventListener(
+            "mousedown",
+            this.#elementMouseDown,
+          );
+        }
+        currentElement.addEventListener("mousedown", this.#elementMouseDown);
+        this.#currentElement = currentElement;
+      }
+    }
+  }
+
   #mouseUp(event) {
     if (!this.#gesture.config.enabled) {
       return true;
+    }
+    console.debug("mouse up", event);
+    const edgeGesture = this.#edgeGesture;
+    if (event.button == 1) {
+      edgeGesture.toggle();
     }
     if (this.#rmouseDown && event.buttons > 0) {
       if (event.button == 2) {
@@ -80,7 +104,6 @@ class MouseHandler {
     this.#rmouseDown = false;
     //always remove canvas on mouse up
     this.#gesture.stop();
-    console.debug("mouse up", event);
     return false;
   }
 
@@ -88,15 +111,17 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
+    console.debug("mouse down", {
+      rmouseDown: this.#rmouseDown,
+      suppress: this.#suppress,
+      event,
+    });
     this.#rmouseDown = event.button == 2;
     if (this.#rmouseDown && this.#suppress) {
       this.#gesture.start(event);
       return false;
     }
-    console.debug("mouse down", {
-      rmouseDown: this.#rmouseDown,
-      suppress: this.#suppress,
-    });
+
     return true;
   }
 
@@ -104,29 +129,14 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    this.#updateCurrentElement(event);
-    if (this.#rmouseDown) {
-      this.#gesture.move(event);
-      return false;
-    }
-    return true;
-  }
-
-  #updateCurrentElement(event) {
-    const currentElement = this.#elementFromPoint(event.clientX, event.clientY);
-    if (currentElement) {
-      //track the mouse if we are holding the right button
-      if (currentElement !== this.#currentElement) {
-        if (this.#currentElement) {
-          this.#currentElement.removeEventListener(
-            "mousedown",
-            this.#elementMouseDown,
-          );
-        }
-        currentElement.addEventListener("mousedown", this.#elementMouseDown);
-        this.#currentElement = currentElement;
+    if (!this.#edgeGesture.trackingEdge(event)) {
+      this.#watchCurrentElement(event);
+      if (this.#rmouseDown) {
+        this.#gesture.move(event);
+        return false;
       }
     }
+    return true;
   }
 
   install(doc) {

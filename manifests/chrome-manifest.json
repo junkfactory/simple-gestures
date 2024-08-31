@@ -23,6 +23,8 @@
         "src/browser.js",
         "src/lib.js",
         "src/canvas.js",
+        "src/scroller.js",
+        "src/edgegestures.js",
         "src/mousehandler.js",
         "src/simplegestures.js"
       ],

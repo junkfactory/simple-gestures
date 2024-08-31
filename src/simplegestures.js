@@ -211,5 +211,8 @@ class SimpleGesture {
   }
 }
 
-const mouseHandler = new MouseHandler(new SimpleGesture());
+const mouseHandler = new MouseHandler({
+  gesture: new SimpleGesture(),
+  edgeGesture: new EdgeGestures(),
+});
 mouseHandler.install(document);
