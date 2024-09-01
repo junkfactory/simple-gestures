@@ -171,4 +171,123 @@ class Dom {
     }
     return null;
   }
+
+  //
+  // Returns the first visible clientRect of an element if it exists. Otherwise it returns null.
+  //
+  // WARNING: If testChildren = true then the rects of visible (eg. floated) children may be
+  // returned instead. This is used for LinkHints and focusInput, **BUT IS UNSUITABLE FOR MOST OTHER
+  // PURPOSES**.
+  //
+  static getVisibleClientRect(element, testChildren) {
+    // Note: this call will be expensive if we modify the DOM in between calls.
+    let clientRect;
+    if (testChildren == null) testChildren = false;
+    const clientRects = (() => {
+      const result = [];
+      for (clientRect of element.getClientRects()) {
+        result.push(Rect.copy(clientRect));
+      }
+      return result;
+    })();
+
+    // Inline elements with font-size: 0px; will declare a height of zero, even if a child with
+    // non-zero font-size contains text.
+    let isInlineZeroHeight = function () {
+      const elementComputedStyle = window.getComputedStyle(element, null);
+      const isInlineZeroFontSize =
+        0 ===
+          elementComputedStyle.getPropertyValue("display").indexOf("inline") &&
+        elementComputedStyle.getPropertyValue("font-size") === "0px";
+      // Override the function to return this value for the rest of this context.
+      isInlineZeroHeight = () => isInlineZeroFontSize;
+      return isInlineZeroFontSize;
+    };
+
+    for (clientRect of clientRects) {
+      // If the link has zero dimensions, it may be wrapping visible but floated elements. Check for
+      // this.
+      let computedStyle;
+      if ((clientRect.width === 0 || clientRect.height === 0) && testChildren) {
+        for (const child of Array.from(element.children)) {
+          computedStyle = window.getComputedStyle(child, null);
+          // Ignore child elements which are not floated and not absolutely positioned for parent
+          // elements with zero width/height, as long as the case described at isInlineZeroHeight
+          // does not apply.
+          // NOTE(mrmr1993): This ignores floated/absolutely positioned descendants nested within
+          // inline children.
+          const position = computedStyle.getPropertyValue("position");
+          if (
+            computedStyle.getPropertyValue("float") === "none" &&
+            !["absolute", "fixed"].includes(position) &&
+            !(
+              clientRect.height === 0 &&
+              isInlineZeroHeight() &&
+              0 === computedStyle.getPropertyValue("display").indexOf("inline")
+            )
+          ) {
+            continue;
+          }
+          const childClientRect = Dom.getVisibleClientRect(child, true);
+          if (
+            childClientRect === null ||
+            childClientRect.width < 3 ||
+            childClientRect.height < 3
+          )
+            continue;
+          return childClientRect;
+        }
+      } else {
+        clientRect = Dom.cropRectToVisible(clientRect);
+
+        if (
+          clientRect === null ||
+          clientRect.width < 3 ||
+          clientRect.height < 3
+        )
+          continue;
+
+        // eliminate invisible elements (see test_harnesses/visibility_test.html)
+        computedStyle = window.getComputedStyle(element, null);
+        if (computedStyle.getPropertyValue("visibility") !== "visible")
+          continue;
+
+        return clientRect;
+      }
+    }
+
+    return null;
+  }
+
+  //
+  // Bounds the rect by the current viewport dimensions. If the rect is offscreen or has a height or
+  // width < 3 then null is returned instead of a rect.
+  //
+  static cropRectToVisible(rect) {
+    const boundedRect = Rect.create(
+      Math.max(rect.left, 0),
+      Math.max(rect.top, 0),
+      rect.right,
+      rect.bottom,
+    );
+    if (
+      boundedRect.top >= window.innerHeight - 4 ||
+      boundedRect.left >= window.innerWidth - 4
+    ) {
+      return null;
+    } else {
+      return boundedRect;
+    }
+  }
+
+  // Get the element in the DOM hierachy that contains `element`.
+  // If the element is rendered in a shadow DOM via a <content> element, the <content> element will
+  // be returned, so the shadow DOM is traversed rather than passed over.
+  static getContainingElement(element) {
+    return (
+      (typeof element.getDestinationInsertionPoints === "function"
+        ? element.getDestinationInsertionPoints()[0]
+        : undefined) || element.parentElement
+    );
+  }
 }

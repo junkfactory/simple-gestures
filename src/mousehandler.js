@@ -83,10 +83,10 @@ class MouseHandler {
       return true;
     }
     console.debug("mouse up", event);
-    const edgeGesture = this.#edgeGesture;
-    if (event.button == 1) {
-      edgeGesture.toggle();
-    }
+    // const edgeGesture = this.#edgeGesture;
+    // if (event.button == 1) {
+    //   edgeGesture.toggle();
+    // }
     if (this.#rmouseDown && event.buttons > 0) {
       if (event.button == 2) {
         browser.runtime.sendMessage({ msg: Actions.NextTab });
@@ -129,12 +129,11 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    if (!this.#edgeGesture.trackingEdge(event)) {
-      this.#watchCurrentElement(event);
-      if (this.#rmouseDown) {
-        this.#gesture.move(event);
-        return false;
-      }
+    this.#edgeGesture.trackingEdge(event);
+    this.#watchCurrentElement(event);
+    if (this.#rmouseDown) {
+      this.#gesture.move(event);
+      return false;
     }
     return true;
   }

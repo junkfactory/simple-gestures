@@ -20,6 +20,7 @@
       "matches": ["<all_urls>"],
       "js": [
         "src/mouse.js",
+        "src/rect.js",
         "src/dom.js",
         "src/lib.js",
         "src/canvas.js",

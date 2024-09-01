@@ -31,16 +31,17 @@ const Direction = {
 class EdgeGestures {
   #config;
   #active = false;
-  #threshold = 0.15;
+  #threshold = 0.05;
   #scroller;
 
   constructor(config) {
     this.#config = config;
     this.#scroller = new Scroller();
+    this.toggle();
   }
 
   #calculateJump({ pos, max, direction, threshold }) {
-    const step = 50;
+    const step = 10;
     const quarter = threshold / 4;
     if (direction === Direction.TOP || direction === Direction.LEFT) {
       if (pos < max + quarter) {
@@ -100,17 +101,17 @@ class EdgeGestures {
         threshold: thresholdValue,
         direction: d,
       });
-      console.debug("top", { x, y, vw, vh, thresholdValue, jump });
+      console.debug(
+        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
+      );
       this.#scroller.start({
-        direction: d,
-        x: 0,
-        y: -jump,
+        direction: "y",
+        amount: jump,
       });
     } else if (edgeArea.right) {
       this.#scroller.start({
-        direction: Direction.RIGHT,
-        x: 10,
-        y: 0,
+        direction: "x",
+        amount: 10,
       });
     } else if (edgeArea.bottom) {
       const d = Direction.BOTTOM;
@@ -124,15 +125,13 @@ class EdgeGestures {
         `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
       );
       this.#scroller.start({
-        direction: Direction.BOTTOM,
-        x: 0,
-        y: jump,
+        direction: "y",
+        amount: -jump,
       });
     } else if (edgeArea.left) {
       this.#scroller.start({
-        direction: Direction.LEFT,
-        x: -10,
-        y: 0,
+        direction: "x",
+        amount: -10,
       });
     } else {
       this.#scroller.stop(Direction.ANY);
