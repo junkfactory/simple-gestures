@@ -20,7 +20,7 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-console.debug = () => {};
+// console.debug = () => {};
 
 class MouseHandler {
   #gesture;
@@ -129,12 +129,21 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    this.#edgeGesture.trackingEdge(event);
     this.#watchCurrentElement(event);
     if (this.#rmouseDown) {
       this.#gesture.move(event);
       return false;
     }
+    this.#edgeGesture.trackingEdge(event);
+    return true;
+  }
+
+  #mouseLeave(event) {
+    if (!this.#gesture.config.enabled) {
+      return true;
+    }
+    console.debug("mouse leave", event);
+    // this.#edgeGesture.trackingEdge(event);
     return true;
   }
 
@@ -144,6 +153,7 @@ class MouseHandler {
     doc.onmousemove = this.#mouseMove.bind(this);
     doc.onmouseup = this.#mouseUp.bind(this);
     doc.onmousedown = this.#mouseDown.bind(this);
+    doc.onmouseleave = this.#mouseLeave.bind(this);
     this.#gesture.install(doc);
   }
 }

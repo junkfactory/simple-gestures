@@ -93,13 +93,32 @@ class EdgeGestures {
       left: x < vw * this.#threshold,
       right: x > vw * (1 - this.#threshold),
     };
+
+    if (event.type == "mouseout") {
+      this.#scroller.stop(Direction.ANY);
+      return true;
+    }
+
     if (edgeArea.top) {
-      const d = Direction.TOP;
       const jump = this.#calculateJump({
         pos: y,
         max: 0,
         threshold: thresholdValue,
-        direction: d,
+        direction: Direction.TOP,
+      });
+      console.debug(
+        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
+      );
+      this.#scroller.start({
+        direction: "y",
+        amount: -jump,
+      });
+    } else if (edgeArea.bottom) {
+      const jump = this.#calculateJump({
+        pos: y,
+        max: vh - thresholdValue,
+        threshold: thresholdValue,
+        direction: Direction.BOTTOM,
       });
       console.debug(
         `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
@@ -112,21 +131,6 @@ class EdgeGestures {
       this.#scroller.start({
         direction: "x",
         amount: 10,
-      });
-    } else if (edgeArea.bottom) {
-      const d = Direction.BOTTOM;
-      const jump = this.#calculateJump({
-        pos: y,
-        max: vh - thresholdValue,
-        threshold: thresholdValue,
-        direction: d,
-      });
-      console.debug(
-        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
-      );
-      this.#scroller.start({
-        direction: "y",
-        amount: -jump,
       });
     } else if (edgeArea.left) {
       this.#scroller.start({

@@ -351,6 +351,8 @@ const CoreScroller = {
 };
 
 class Scroller {
+  #state;
+
   constructor() {
     CoreScroller.init();
     this.reset();
@@ -358,6 +360,27 @@ class Scroller {
 
   reset() {
     activatedElement = null;
+    this.#state = {
+      direction: false,
+      amount: 0,
+      scrollId: null,
+
+      cancelAndReset() {
+        if (!this.scrollId) {
+          return false;
+        }
+        console.debug(`cancel and reset`);
+        clearInterval(this.scrollId);
+        this.direction = false;
+        this.amount = 0;
+        this.scrollId = null;
+        return true;
+      },
+
+      isEquals({ direction, amount }) {
+        return this.direction === direction && this.amount === amount;
+      },
+    };
   }
 
   // scroll the active element in :direction by :amount * :factor.
@@ -465,11 +488,28 @@ class Scroller {
   }
 
   start({ direction, amount }) {
+    const state = this.#state;
+    if (state.isEquals({ direction, amount })) {
+      console.debug(`scroll already started ${direction} ${amount}`);
+      return;
+    }
     console.debug(`start scroll ${direction} ${amount}`);
-    this.scrollBy("y", -amount, 0.5);
+    state.cancelAndReset();
+    this.scrollBy(direction, amount, 0.5, false);
+    state.direction = direction;
+    state.amount = amount;
+    state.scrollId = setInterval(
+      (s) => {
+        this.scrollBy(s.direction, s.amount, 0.5, true);
+      },
+      100,
+      state,
+    );
   }
 
   stop() {
-    console.debug(`stop scroll`);
+    if (this.#state.cancelAndReset()) {
+      CoreScroller.init();
+    }
   }
 }

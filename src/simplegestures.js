@@ -69,8 +69,8 @@ class SimpleGesture {
   #canvas;
   #dom;
 
-  constructor() {
-    this.config = new Config();
+  constructor(config) {
+    this.config = config;
     this.#coords = new Coords();
     this.#canvas = new Canvas(this.config);
     this.#dom = new Dom();
@@ -211,8 +211,9 @@ class SimpleGesture {
   }
 }
 
+const config = new Config();
 const mouseHandler = new MouseHandler({
-  gesture: new SimpleGesture(),
-  edgeGesture: new EdgeGestures(),
+  gesture: new SimpleGesture(config),
+  edgeGesture: new EdgeGestures(config),
 });
 mouseHandler.install(document);
