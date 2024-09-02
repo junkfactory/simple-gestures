@@ -28,22 +28,51 @@ class Canvas {
     this.#config = config;
   }
 
+  static create(id, { x, y, width, height }) {
+    const canvas = document.createElement("canvas");
+    canvas.id = id;
+    canvas.style.width = width;
+    canvas.width = width;
+    canvas.style.height = height;
+    canvas.height = height;
+    canvas.style.left = x + "px";
+    canvas.style.top = y + "px";
+    canvas.style.overflow = "visible";
+    canvas.style.position = "absolute";
+    canvas.style.zIndex = "10000";
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  static destroy(canvas) {
+    if (canvas) {
+      try {
+        document.body.removeChild(canvas);
+      } catch (error) {}
+    }
+  }
+
   get instance() {
     return $("#" + this.#id);
   }
 
   create() {
-    let canvas = this.instance;
-    if (!canvas) {
-      canvas = document.createElement("canvas");
-      canvas.id = this.#id;
-      document.body.appendChild(canvas);
-    }
-
     const vw = window.visualViewport.width - window.screenX;
     const vh = window.visualViewport.height - window.screenY;
 
-    const canvas_top = window.visualViewport.pageTop + "px";
+    const canvas_top = window.visualViewport.pageTop;
+
+    let canvas = this.instance;
+    if (!canvas) {
+      Canvas.create(this.#id, {
+        x: 0,
+        y: canvas_top,
+        width: vw,
+        height: vh,
+      });
+      return;
+    }
+
     canvas.style.width = vw;
     canvas.width = vw;
     canvas.style.height = vh;
@@ -75,9 +104,7 @@ class Canvas {
   destroy() {
     const canvas = this.instance;
     if (canvas) {
-      try {
-        document.body.removeChild(canvas);
-      } catch (error) {}
+      Canvas.destroy(canvas);
     } else {
       console.info("Canvas not found to destroy");
     }

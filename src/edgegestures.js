@@ -28,53 +28,72 @@ const Direction = {
   ANY: -1,
 };
 
+const STEP = 10;
+
 class EdgeGestures {
   #config;
   #active = false;
-  #threshold = 0.05;
+  #threshold = 0.1;
   #scroller;
+  #activeArea = null;
 
   constructor(config) {
     this.#config = config;
     this.#scroller = new Scroller();
+    addEventListener("blur", this.#cancelIfScrolling.bind(this));
+    addEventListener("pagehide", this.#cancelIfScrolling.bind(this));
+    addEventListener("hashchange", this.#cancelIfScrolling.bind(this));
+    addEventListener("scroll", this.#onScrollEnd.bind(this));
     this.toggle();
   }
 
+  #onScrollEnd(event) {
+    this.#activeArea?.render();
+  }
+
+  #createActiveArea(id, { x, y, width, height }) {
+    let activeArea = this.#activeArea;
+    if (!activeArea || activeArea.canvas.id !== id) {
+      activeArea = {
+        canvas: Canvas.create(id, { x: x(), y: y(), width, height }),
+        pos: { x, y },
+        render() {
+          this.canvas.style.left = this.pos.x() + "px";
+          this.canvas.style.top = this.pos.y() + "px";
+        },
+      };
+      activeArea.canvas.onmouseout = this.#cancelIfScrolling.bind(this);
+      this.#activeArea = activeArea;
+    }
+    activeArea.render();
+  }
+
+  #cancelIfScrolling(event) {
+    if (this.#activeArea) {
+      Canvas.destroy(this.#activeArea.canvas);
+      this.#activeArea = null;
+    }
+    this.#scroller.stop(Direction.ANY);
+  }
+
   #calculateJump({ pos, max, direction, threshold }) {
-    const step = 10;
-    const quarter = threshold / 4;
+    const area = Math.ceil(threshold / 2);
     if (direction === Direction.TOP || direction === Direction.LEFT) {
-      if (pos < max + quarter) {
-        return step << 4;
-      } else if (pos < max + quarter * 2) {
-        return step << 3;
-      } else if (pos < max + quarter * 3) {
-        return step << 2;
-      } else {
-        return step << 1;
+      if (pos < max + area) {
+        return STEP << 3;
       }
+      return STEP << 1;
     } else {
-      console.debug(
-        `pos: ${pos}, max: ${max}, q1: ${max + quarter}, q2: ${max + quarter * 2}, q3: ${max + quarter * 3}`,
-      );
-      if (pos > max + quarter * 3) {
-        return step << 4;
-      } else if (pos > max + quarter * 2) {
-        return step << 3;
-      } else if (pos > max + quarter) {
-        return step << 2;
-      } else {
-        return step << 1;
+      if (pos > max + area) {
+        return STEP << 3;
       }
+      return STEP << 1;
     }
   }
 
   toggle() {
     const active = !this.#active;
     console.debug("EdgeGestures active: ", active);
-    // if (!active) {
-    //   this.#scroller.stop(Direction.ANY);
-    // }
     this.#active = active;
   }
 
@@ -82,11 +101,12 @@ class EdgeGestures {
     if (!this.#active) {
       return false;
     }
-    const vw = window.visualViewport.width - window.screenX;
+    const vw = window.visualViewport.width - window.screenX - 2;
     const vh = window.visualViewport.height - window.screenY;
     const thresholdValue = vh * this.#threshold;
     const x = event.clientX;
     const y = event.clientY;
+
     const edgeArea = {
       top: y < vh * this.#threshold,
       bottom: y > vh * (1 - this.#threshold),
@@ -94,35 +114,37 @@ class EdgeGestures {
       right: x > vw * (1 - this.#threshold),
     };
 
-    if (event.type == "mouseout") {
-      this.#scroller.stop(Direction.ANY);
-      return true;
-    }
-
     if (edgeArea.top) {
+      this.#createActiveArea("topArea", {
+        x: () => 0,
+        y: () => window.visualViewport.pageTop,
+        width: vw,
+        height: 10,
+      });
       const jump = this.#calculateJump({
         pos: y,
         max: 0,
         threshold: thresholdValue,
         direction: Direction.TOP,
       });
-      console.debug(
-        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
-      );
       this.#scroller.start({
         direction: "y",
         amount: -jump,
       });
     } else if (edgeArea.bottom) {
+      this.#createActiveArea("bottomArea", {
+        x: () => 0,
+        y: () =>
+          window.visualViewport.pageTop + window.visualViewport.height - 10,
+        width: vw,
+        height: 10,
+      });
       const jump = this.#calculateJump({
         pos: y,
         max: vh - thresholdValue,
         threshold: thresholdValue,
         direction: Direction.BOTTOM,
       });
-      console.debug(
-        `bottom x: ${x}, y: ${y}, vw: ${vw}, vh: ${vh}, thresholdValue: ${thresholdValue}, jump: ${jump}`,
-      );
       this.#scroller.start({
         direction: "y",
         amount: jump,
@@ -130,15 +152,15 @@ class EdgeGestures {
     } else if (edgeArea.right) {
       this.#scroller.start({
         direction: "x",
-        amount: 10,
+        amount: STEP,
       });
     } else if (edgeArea.left) {
       this.#scroller.start({
         direction: "x",
-        amount: -10,
+        amount: -STEP,
       });
     } else {
-      this.#scroller.stop(Direction.ANY);
+      this.#cancelIfScrolling(event);
     }
     return true;
   }

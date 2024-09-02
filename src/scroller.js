@@ -229,25 +229,12 @@ const checkVisibility = function (element) {
   }
 };
 
-// How scrolling is handled by CoreScroller.
-//   - For jump scrolling, the entire scroll happens immediately.
-//   - For smooth scrolling with distinct key presses, a separate animator is initiated for each key
-//     press. Therefore, several animators may be active at the same time. This ensures that two
-//     quick taps on `j` scroll to the same position as two slower taps.
-//   - For smooth scrolling with keyboard repeat (continuous scrolling), the most recently-activated
-//     animator continues scrolling at least until its keyup event is received. We never initiate a
-//     new animator on keyboard repeat.
-
 // CoreScroller contains the core function (scroll) and logic for relative scrolls. All scrolls are
 // ultimately translated to relative scrolls. CoreScroller is not exported.
 const CoreScroller = {
-  init() {
-    this.time = 0;
-    this.lastEvent = this.keyIsDown = null;
-  },
-
-  wouldNotInitiateScroll() {
-    return this.lastEvent && this.lastEvent.repeat;
+  init(isCancelled) {
+    this.isCancelled = isCancelled;
+    this.scrollId = null;
   },
 
   // Calibration fudge factors for continuous scrolling. The calibration value starts at 1.0. We
@@ -264,6 +251,10 @@ const CoreScroller = {
 
   // Scroll element by a relative amount (a number) in some direction.
   scroll(element, direction, amount, continuous) {
+    if (this.scrollId) {
+      cancelAnimationFrame(this.scrollId);
+      this.scrollId = null;
+    }
     if (continuous == null) continuous = true;
     if (!amount) {
       return;
@@ -271,13 +262,9 @@ const CoreScroller = {
 
     // We don't activate new animators on keyboard repeats; rather, the most-recently activated
     // animator continues scrolling.
-    if (this.lastEvent != null ? this.lastEvent.repeat : undefined) {
+    if (this.isCancelled()) {
       return;
     }
-
-    const activationTime = ++this.time;
-    const myKeyIsStillDown = () =>
-      this.time === activationTime && this.keyIsDown;
 
     // Store amount's sign and make amount positive; the arithmetic is clearer when amount is
     // positive.
@@ -296,8 +283,8 @@ const CoreScroller = {
       if (previousTimestamp == null) {
         previousTimestamp = timestamp;
       }
-      if (timestamp === previousTimestamp) {
-        return requestAnimationFrame(animate);
+      if (!this.isCancelled() && timestamp === previousTimestamp) {
+        this.scrollId = requestAnimationFrame(animate);
       }
 
       // The elapsed time is typically about 16ms.
@@ -309,7 +296,6 @@ const CoreScroller = {
       // speeds for distinct keypresses. For continuous scrolls, some scrolls are too slow, and
       // others too fast. Here, we speed up the slower scrolls, and slow down the faster scrolls.
       if (
-        myKeyIsStillDown() &&
         75 <= totalElapsed &&
         this.minCalibration <= calibration &&
         calibration <= this.maxCalibration
@@ -327,26 +313,20 @@ const CoreScroller = {
       // Calculate the initial delta, rounding up to ensure progress. Then, adjust delta to account
       // for the current scroll state.
       let delta = Math.ceil(amount * (elapsed / duration) * calibration);
-      delta = myKeyIsStillDown()
-        ? delta
-        : Math.max(0, Math.min(delta, amount - totalDelta));
-
-      if (delta && performScroll(element, direction, sign * delta)) {
+      if (
+        !this.isCancelled() &&
+        delta &&
+        performScroll(element, direction, sign * delta)
+      ) {
         totalDelta += delta;
-        return requestAnimationFrame(animate);
+        this.scrollId = requestAnimationFrame(animate);
       } else {
         return checkVisibility(element);
       }
     };
 
-    // If we've been asked not to be continuous, then we advance time, so the myKeyIsStillDown test
-    // always fails.
-    if (!continuous) {
-      ++this.time;
-    }
-
     // Start scrolling.
-    requestAnimationFrame(animate);
+    this.scrollId = requestAnimationFrame(animate);
   },
 };
 
@@ -354,11 +334,6 @@ class Scroller {
   #state;
 
   constructor() {
-    CoreScroller.init();
-    this.reset();
-  }
-
-  reset() {
     activatedElement = null;
     this.#state = {
       direction: false,
@@ -366,21 +341,19 @@ class Scroller {
       scrollId: null,
 
       cancelAndReset() {
-        if (!this.scrollId) {
-          return false;
+        if (this.scrollId) {
+          clearTimeout(this.scrollId);
+          this.scrollId = null;
         }
-        console.debug(`cancel and reset`);
-        clearInterval(this.scrollId);
         this.direction = false;
         this.amount = 0;
-        this.scrollId = null;
-        return true;
       },
 
       isEquals({ direction, amount }) {
         return this.direction === direction && this.amount === amount;
       },
     };
+    CoreScroller.init(() => this.#state.direction === false);
   }
 
   // scroll the active element in :direction by :amount * :factor.
@@ -395,6 +368,7 @@ class Scroller {
       continuous = true;
     }
     if (!getScrollingElement() && amount instanceof Number) {
+      console.debug("window scroll");
       if (direction === "x") {
         window.scrollBy(amount, 0);
       } else {
@@ -412,18 +386,14 @@ class Scroller {
       return;
     }
 
-    // Avoid the expensive scroll calculation if it will not be used. This reduces costs during
-    // smooth, continuous scrolls, and is just an optimization.
-    if (!CoreScroller.wouldNotInitiateScroll()) {
-      const element = findScrollableElement(
-        activatedElement,
-        direction,
-        amount,
-        factor,
-      );
-      const elementAmount = factor * getDimension(element, direction, amount);
-      return CoreScroller.scroll(element, direction, elementAmount, continuous);
-    }
+    const element = findScrollableElement(
+      activatedElement,
+      direction,
+      amount,
+      factor,
+    );
+    const elementAmount = factor * getDimension(element, direction, amount);
+    return CoreScroller.scroll(element, direction, elementAmount, continuous);
   }
 
   scrollTo(direction, pos) {
@@ -443,50 +413,6 @@ class Scroller {
     return CoreScroller.scroll(element, direction, amount);
   }
 
-  // Is element scrollable and not the activated element?
-  isScrollableElement(element) {
-    if (!activatedElement) {
-      activatedElement =
-        (getScrollingElement() && firstScrollableElement()) ||
-        getScrollingElement();
-    }
-    return element !== activatedElement && isScrollableElement(element);
-  }
-
-  // Scroll the top, bottom, left and right of element into view. The is used by visual mode to
-  // ensure the focus remains visible.
-  scrollIntoView(element) {
-    if (!activatedElement) {
-      activatedElement = getScrollingElement() && firstScrollableElement();
-    }
-    const rects = element.getClientRects();
-    const rect = rects ? rects[0] : undefined;
-    if (rect) {
-      // Scroll y axis.
-      let amount;
-      if (rect.bottom < 0) {
-        amount = rect.bottom - Math.min(rect.height, window.innerHeight);
-        element = findScrollableElement(element, "y", amount, 1);
-        CoreScroller.scroll(element, "y", amount, false);
-      } else if (window.innerHeight < rect.top) {
-        amount = rect.top + Math.min(rect.height - window.innerHeight, 0);
-        element = findScrollableElement(element, "y", amount, 1);
-        CoreScroller.scroll(element, "y", amount, false);
-      }
-
-      // Scroll x axis.
-      if (rect.right < 0) {
-        amount = rect.right - Math.min(rect.width, window.innerWidth);
-        element = findScrollableElement(element, "x", amount, 1);
-        CoreScroller.scroll(element, "x", amount, false);
-      } else if (window.innerWidth < rect.left) {
-        amount = rect.left + Math.min(rect.width - window.innerWidth, 0);
-        element = findScrollableElement(element, "x", amount, 1);
-        CoreScroller.scroll(element, "x", amount, false);
-      }
-    }
-  }
-
   start({ direction, amount }) {
     const state = this.#state;
     if (state.isEquals({ direction, amount })) {
@@ -495,21 +421,17 @@ class Scroller {
     }
     console.debug(`start scroll ${direction} ${amount}`);
     state.cancelAndReset();
-    this.scrollBy(direction, amount, 0.5, false);
     state.direction = direction;
     state.amount = amount;
-    state.scrollId = setInterval(
-      (s) => {
-        this.scrollBy(s.direction, s.amount, 0.5, true);
-      },
-      100,
-      state,
+    state.scrollId = setTimeout(
+      (_this) =>
+        _this.scrollBy(_this.#state.direction, _this.#state.amount, 0.5, true),
+      200,
+      this,
     );
   }
 
   stop() {
-    if (this.#state.cancelAndReset()) {
-      CoreScroller.init();
-    }
+    this.#state.cancelAndReset();
   }
 }

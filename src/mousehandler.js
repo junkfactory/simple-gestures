@@ -20,7 +20,7 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// console.debug = () => {};
+console.debug = () => {};
 
 class MouseHandler {
   #gesture;
@@ -43,21 +43,11 @@ class MouseHandler {
     }
 
     if (this.#suppress) {
-      console.debug("context menu suppress", {
-        event: event,
-        rmouseDown: this.#rmouseDown,
-        suppress: this.#suppress,
-      });
       return false;
     }
 
     this.#rmouseDown = false;
     this.#suppress++;
-    console.debug("context menu", {
-      event: event,
-      rmouseDown: this.#rmouseDown,
-      suppress: this.#suppress,
-    });
     return true;
   }
 
@@ -82,11 +72,6 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    console.debug("mouse up", event);
-    // const edgeGesture = this.#edgeGesture;
-    // if (event.button == 1) {
-    //   edgeGesture.toggle();
-    // }
     if (this.#rmouseDown && event.buttons > 0) {
       if (event.button == 2) {
         browser.runtime.sendMessage({ msg: Actions.NextTab });
@@ -111,18 +96,13 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    console.debug("mouse down", {
-      rmouseDown: this.#rmouseDown,
-      suppress: this.#suppress,
-      event,
-    });
     this.#rmouseDown = event.button == 2;
     if (this.#rmouseDown && this.#suppress) {
       this.#gesture.start(event);
       return false;
     }
 
-    return false;
+    return true;
   }
 
   #mouseMove(event) {
@@ -138,22 +118,12 @@ class MouseHandler {
     return true;
   }
 
-  #mouseLeave(event) {
-    if (!this.#gesture.config.enabled) {
-      return true;
-    }
-    console.debug("mouse leave", event);
-    // this.#edgeGesture.trackingEdge(event);
-    return true;
-  }
-
   install(doc) {
     this.#elementFromPoint = doc.elementFromPoint.bind(doc);
     doc.oncontextmenu = this.#contextMenu.bind(this);
     doc.onmousemove = this.#mouseMove.bind(this);
     doc.onmouseup = this.#mouseUp.bind(this);
     doc.onmousedown = this.#mouseDown.bind(this);
-    doc.onmouseleave = this.#mouseLeave.bind(this);
     this.#gesture.install(doc);
   }
 }
