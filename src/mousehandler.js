@@ -24,15 +24,15 @@ console.debug = () => {};
 
 class MouseHandler {
   #gesture;
-  #edgeGesture;
+  #edgeScroller;
   #rmouseDown = false;
   #currentElement = null;
   #suppress = 1;
   #elementMouseDown;
 
-  constructor({ gesture, edgeGesture }) {
+  constructor({ gesture, edgeScroller }) {
     this.#gesture = gesture;
-    this.#edgeGesture = edgeGesture;
+    this.#edgeScroller = edgeScroller;
     this.#elementMouseDown = this.#mouseDown.bind(this);
   }
 
@@ -79,7 +79,7 @@ class MouseHandler {
       this.#suppress,
     );
     if (event.button == 0) {
-      this.#edgeGesture.activatateElementAt(event.clientX, event.clientY);
+      this.#edgeScroller.activatateElementAt(event.clientX, event.clientY);
     }
     if (this.#rmouseDown && event.buttons > 0) {
       if (this.#gesture.config.rockerEnabled) {
@@ -125,7 +125,7 @@ class MouseHandler {
       this.#gesture.move(event);
       return false;
     }
-    this.#edgeGesture.trackingEdge(event);
+    this.#edgeScroller.trackingEdge(event);
     return true;
   }
 

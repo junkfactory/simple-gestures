@@ -25,7 +25,7 @@
         "src/lib.js",
         "src/canvas.js",
         "src/scroller.js",
-        "src/edgegestures.js",
+        "src/edgescroller.js",
         "src/mousehandler.js",
         "src/simplegestures.js"
       ],
