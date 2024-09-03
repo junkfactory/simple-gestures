@@ -72,15 +72,29 @@ class EdgeGestures {
   #createActiveArea(id, { x, y, width, height }) {
     let activeArea = this.#activeArea;
     if (!activeArea || activeArea.canvas.id !== id) {
+      const canvas = Canvas.create(id, { x, y, width, height });
+      const ctx = canvas.getContext("2d");
+      ctx.globalAlpha = 0.8;
+      const radialGradient = ctx.createRadialGradient(
+        width / 2,
+        0,
+        1,
+        width / 4,
+        height,
+        width,
+      );
+      radialGradient.addColorStop(0, "#aaa");
+      radialGradient.addColorStop(1, "transparent");
+      ctx.fillStyle = radialGradient;
+      ctx.fillRect(0, 0, width, height);
       activeArea = {
-        canvas: Canvas.create(id, { x: x(), y: y(), width, height }),
+        canvas: canvas,
         pos: { x, y },
         render() {
           this.canvas.style.left = this.pos.x() + "px";
           this.canvas.style.top = this.pos.y() + "px";
         },
       };
-      activeArea.canvas.onmouseout = this.#cancelIfScrolling.bind(this);
       this.#activeArea = activeArea;
     }
     activeArea.render();
