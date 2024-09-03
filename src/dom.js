@@ -290,4 +290,8 @@ class Dom {
         : undefined) || element.parentElement
     );
   }
+
+  static elementFromPoint(x, y) {
+    return document.elementFromPoint(x, y);
+  }
 }

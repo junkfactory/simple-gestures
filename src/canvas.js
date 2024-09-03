@@ -21,7 +21,7 @@
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class Canvas {
-  #id = "canvas";
+  #canvas = null;
   #config;
 
   constructor(config) {
@@ -52,19 +52,15 @@ class Canvas {
     }
   }
 
-  get instance() {
-    return $("#" + this.#id);
-  }
-
   create() {
     const vw = window.visualViewport.width - window.screenX;
     const vh = window.visualViewport.height - window.screenY;
 
     const canvas_top = window.visualViewport.pageTop;
 
-    let canvas = this.instance;
+    let canvas = this.#canvas;
     if (!canvas) {
-      Canvas.create(this.#id, {
+      this.#canvas = Canvas.create("simplegesture", {
         x: 0,
         y: canvas_top,
         width: vw,
@@ -85,7 +81,7 @@ class Canvas {
   }
 
   draw({ move, line }) {
-    const canvas = this.instance;
+    const canvas = this.#canvas;
     if (canvas) {
       const canvas_top = canvas.style.top.replace("px", "");
       const ctx = canvas.getContext("2d");
@@ -102,9 +98,10 @@ class Canvas {
   }
 
   destroy() {
-    const canvas = this.instance;
+    const canvas = this.#canvas;
     if (canvas) {
       Canvas.destroy(canvas);
+      this.#canvas = null;
     } else {
       console.info("Canvas not found to destroy");
     }

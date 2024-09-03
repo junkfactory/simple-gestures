@@ -28,7 +28,6 @@ class MouseHandler {
   #rmouseDown = false;
   #currentElement = null;
   #suppress = 1;
-  #elementFromPoint;
   #elementMouseDown;
 
   constructor({ gesture, edgeGesture }) {
@@ -37,7 +36,7 @@ class MouseHandler {
     this.#elementMouseDown = this.#mouseDown.bind(this);
   }
 
-  #contextMenu(event) {
+  #contextMenu() {
     if (!this.#gesture.config.enabled) {
       return true;
     }
@@ -52,7 +51,7 @@ class MouseHandler {
   }
 
   #watchCurrentElement(event) {
-    const currentElement = this.#elementFromPoint(event.clientX, event.clientY);
+    const currentElement = Dom.elementFromPoint(event.clientX, event.clientY);
     if (currentElement) {
       //track the mouse if we are holding the right button
       if (currentElement !== this.#currentElement) {
@@ -72,11 +71,19 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
+    console.debug("mouse up", event);
+    if (event.button == 0) {
+      this.#edgeGesture.activatateElementAt(event.clientX, event.clientY);
+    }
     if (this.#rmouseDown && event.buttons > 0) {
-      if (event.button == 2) {
-        browser.runtime.sendMessage({ msg: Actions.NextTab });
-      } else if (event.button == 0) {
-        browser.runtime.sendMessage({ msg: Actions.PrevTab });
+      if (this.#gesture.config.rockerEnabled) {
+        if (event.button == 2) {
+          browser.runtime.sendMessage({ msg: Actions.NextTab });
+        } else if (event.button == 0) {
+          browser.runtime.sendMessage({ msg: Actions.PrevTab });
+          ++this.#suppress;
+        }
+      } else {
         ++this.#suppress;
       }
     } else if (event.button == 2) {
@@ -96,6 +103,7 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
+    console.debug("mouse down", event);
     this.#rmouseDown = event.button == 2;
     if (this.#rmouseDown && this.#suppress) {
       this.#gesture.start(event);
@@ -119,7 +127,6 @@ class MouseHandler {
   }
 
   install(doc) {
-    this.#elementFromPoint = doc.elementFromPoint.bind(doc);
     doc.oncontextmenu = this.#contextMenu.bind(this);
     doc.onmousemove = this.#mouseMove.bind(this);
     doc.onmouseup = this.#mouseUp.bind(this);

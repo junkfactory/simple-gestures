@@ -356,6 +356,10 @@ class Scroller {
     CoreScroller.init(() => this.#state.direction === false);
   }
 
+  activateElement(element) {
+    activatedElement = element;
+  }
+
   // scroll the active element in :direction by :amount * :factor.
   // :factor is needed because :amount can take on string values, which scrollBy converts to element
   // dimensions.
@@ -393,6 +397,7 @@ class Scroller {
       factor,
     );
     const elementAmount = factor * getDimension(element, direction, amount);
+    console.debug("Scroll element", activatedElement, element);
     return CoreScroller.scroll(element, direction, elementAmount, continuous);
   }
 

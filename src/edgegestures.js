@@ -30,24 +30,38 @@ const Direction = {
 
 const STEP = 10;
 
+const calculateJump = ({ pos, max, direction, threshold }) => {
+  const area = Math.ceil(threshold / 2);
+  if (direction === Direction.TOP || direction === Direction.LEFT) {
+    if (pos < max + area) {
+      return STEP << 3;
+    }
+    return STEP << 1;
+  } else {
+    if (pos > max + area) {
+      return STEP << 3;
+    }
+    return STEP << 1;
+  }
+};
+
 class EdgeGestures {
   #config;
   #active = false;
   #threshold = 0.1;
-  #scroller;
+  #scroller = new Scroller();
   #activeArea = null;
 
   constructor(config) {
     this.#config = config;
-    this.#scroller = new Scroller();
     addEventListener("blur", this.#cancelIfScrolling.bind(this));
     addEventListener("pagehide", this.#cancelIfScrolling.bind(this));
     addEventListener("hashchange", this.#cancelIfScrolling.bind(this));
-    addEventListener("scroll", this.#onScrollEnd.bind(this));
+    addEventListener("scroll", this.#onScroll.bind(this));
     this.toggle();
   }
 
-  #onScrollEnd(event) {
+  #onScroll() {
     this.#activeArea?.render();
   }
 
@@ -68,7 +82,7 @@ class EdgeGestures {
     activeArea.render();
   }
 
-  #cancelIfScrolling(event) {
+  #cancelIfScrolling() {
     if (this.#activeArea) {
       Canvas.destroy(this.#activeArea.canvas);
       this.#activeArea = null;
@@ -76,25 +90,17 @@ class EdgeGestures {
     this.#scroller.stop(Direction.ANY);
   }
 
-  #calculateJump({ pos, max, direction, threshold }) {
-    const area = Math.ceil(threshold / 2);
-    if (direction === Direction.TOP || direction === Direction.LEFT) {
-      if (pos < max + area) {
-        return STEP << 3;
-      }
-      return STEP << 1;
-    } else {
-      if (pos > max + area) {
-        return STEP << 3;
-      }
-      return STEP << 1;
-    }
-  }
-
   toggle() {
     const active = !this.#active;
     console.debug("EdgeGestures active: ", active);
     this.#active = active;
+  }
+
+  activatateElementAt(x, y) {
+    if (!this.#active) {
+      return false;
+    }
+    this.#scroller.activateElement(Dom.elementFromPoint(x, y));
   }
 
   trackingEdge(event) {
@@ -121,7 +127,7 @@ class EdgeGestures {
         width: vw,
         height: 10,
       });
-      const jump = this.#calculateJump({
+      const jump = calculateJump({
         pos: y,
         max: 0,
         threshold: thresholdValue,
@@ -139,7 +145,7 @@ class EdgeGestures {
         width: vw,
         height: 10,
       });
-      const jump = this.#calculateJump({
+      const jump = calculateJump({
         pos: y,
         max: vh - thresholdValue,
         threshold: thresholdValue,
