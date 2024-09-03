@@ -20,7 +20,7 @@
 // ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-console.debug = () => {};
+// console.debug = () => {};
 
 class MouseHandler {
   #gesture;
@@ -71,7 +71,13 @@ class MouseHandler {
     if (!this.#gesture.config.enabled) {
       return true;
     }
-    console.debug("mouse up", event);
+    console.debug(
+      "mouse up",
+      event,
+      this.#gesture.config.rockerEnabled,
+      this.#rmouseDown,
+      this.#suppress,
+    );
     if (event.button == 0) {
       this.#edgeGesture.activatateElementAt(event.clientX, event.clientY);
     }
@@ -83,8 +89,6 @@ class MouseHandler {
           browser.runtime.sendMessage({ msg: Actions.PrevTab });
           ++this.#suppress;
         }
-      } else {
-        ++this.#suppress;
       }
     } else if (event.button == 2) {
       if (this.#gesture.moved) {
@@ -104,10 +108,9 @@ class MouseHandler {
       return true;
     }
     console.debug("mouse down", event);
-    this.#rmouseDown = event.button == 2;
+    this.#rmouseDown = event.button == 2 || event.buttons == 3;
     if (this.#rmouseDown && this.#suppress) {
       this.#gesture.start(event);
-      return false;
     }
 
     return true;
