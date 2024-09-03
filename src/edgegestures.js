@@ -45,9 +45,37 @@ const calculateJump = ({ pos, max, direction, threshold }) => {
   }
 };
 
+const arrow = (id, { x, y, width, height }) => {
+  const centerX = width / 2;
+  const color = "#777";
+  const canvas = Canvas.create(id, { x, y, width, height });
+  const ctx = canvas.getContext("2d");
+  ctx.globalAlpha = 0.8;
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  switch (id) {
+    case "topArea":
+      ctx.moveTo(centerX - 15, height);
+      ctx.lineTo(centerX, 0);
+      ctx.lineTo(centerX + 15, height);
+      ctx.lineTo(centerX - 15, height);
+      break;
+    case "bottomArea":
+      ctx.moveTo(centerX - 15, 0);
+      ctx.lineTo(centerX, height);
+      ctx.lineTo(centerX + 15, 0);
+      ctx.lineTo(centerX - 15, 0);
+      break;
+  }
+  ctx.stroke();
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+  return canvas;
+};
+
 class EdgeGestures {
   #config;
-  #active = false;
   #threshold = 0.1;
   #scroller = new Scroller();
   #activeArea = null;
@@ -62,7 +90,6 @@ class EdgeGestures {
       "mouseleave",
       this.#cancelIfScrolling.bind(this),
     );
-    this.toggle();
   }
 
   #onScroll() {
@@ -72,23 +99,8 @@ class EdgeGestures {
   #createActiveArea(id, { x, y, width, height }) {
     let activeArea = this.#activeArea;
     if (!activeArea || activeArea.canvas.id !== id) {
-      const canvas = Canvas.create(id, { x, y, width, height });
-      const ctx = canvas.getContext("2d");
-      ctx.globalAlpha = 0.8;
-      const radialGradient = ctx.createRadialGradient(
-        width / 2,
-        0,
-        1,
-        width / 4,
-        height,
-        width,
-      );
-      radialGradient.addColorStop(0, "#aaa");
-      radialGradient.addColorStop(1, "transparent");
-      ctx.fillStyle = radialGradient;
-      ctx.fillRect(0, 0, width, height);
       activeArea = {
-        canvas: canvas,
+        canvas: arrow(id, { x, y, width, height }),
         pos: { x, y },
         render() {
           this.canvas.style.left = this.pos.x() + "px";
@@ -109,21 +121,15 @@ class EdgeGestures {
     this.#scroller.stop(Direction.ANY);
   }
 
-  toggle() {
-    const active = !this.#active;
-    console.debug("EdgeGestures active: ", active);
-    this.#active = active;
-  }
-
   activatateElementAt(x, y) {
-    if (!this.#active) {
+    if (!this.#config?.edgeScrollEnabled) {
       return false;
     }
     this.#scroller.activateElement(Dom.elementFromPoint(x, y));
   }
 
   trackingEdge(event) {
-    if (!this.#active) {
+    if (!this.#config?.edgeScrollEnabled) {
       return false;
     }
     const vw = window.visualViewport.width - window.screenX - 2;

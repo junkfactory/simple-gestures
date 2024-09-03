@@ -45,10 +45,12 @@ class Config {
     width: 2,
   };
   rockerEnabled = true;
+  edgeScrollEnabled = false;
   gestures = {};
   actionMap = {};
   update(config) {
     this.rockerEnabled = Boolean(config.rockerEnabled);
+    this.edgeScrollEnabled = Boolean(config.edgeScrollEnabled);
     this.trail.enabled = Boolean(config.trailEnabled);
     this.trail.color = config.trailColor;
     this.trail.width = config.trailWidth;

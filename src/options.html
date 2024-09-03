@@ -174,26 +174,22 @@
             <tr>
               <th>Next page patterns</th>
               <td>
-                <input
-                  type="text"
-                  name="nextPatterns"
-                  class="extra"
-                  value="next,more results,more,newer,>,›,→,»,≫,>>"
-                />
+                <input type="text" name="nextPatterns" class="extra" />
               </td>
             </tr>
             <tr>
               <th>Previos page patterns</th>
               <td>
-                <input
-                  type="text"
-                  name="prevPatterns"
-                  class="extra"
-                  value="prev,previous,back,older,<,‹,←,«,≪,<<"
-                />
+                <input type="text" name="prevPatterns" class="extra" />
               </td>
             </tr>
           </table>
+          <p class="note">
+            Edge scrolling will scroll the page when the mouse is near the edge
+            of the window.
+          </p>
+          <label for="edgeScrollEnabled">Enable edge scrolling:</label>
+          <input type="checkbox" id="edgeScrollEnabled" />
         </div>
       </div>
       <div id="configStatus">
