@@ -249,12 +249,15 @@ const CoreScroller = {
   // Boundary between scrolls which are considered too slow, or too fast.
   calibrationBoundary: 150,
 
-  // Scroll element by a relative amount (a number) in some direction.
-  scroll(element, direction, amount, continuous) {
+  abortIfScrolling() {
     if (this.scrollId) {
       cancelAnimationFrame(this.scrollId);
       this.scrollId = null;
     }
+  },
+
+  // Scroll element by a relative amount (a number) in some direction.
+  scroll(element, direction, amount, continuous) {
     if (continuous == null) continuous = true;
     if (!amount) {
       return;
@@ -338,15 +341,11 @@ class Scroller {
     this.#state = {
       direction: false,
       amount: 0,
-      scrollId: null,
 
       cancelAndReset() {
-        if (this.scrollId) {
-          clearTimeout(this.scrollId);
-          this.scrollId = null;
-        }
         this.direction = false;
         this.amount = 0;
+        CoreScroller.abortIfScrolling();
       },
 
       isEquals({ direction, amount }) {
@@ -360,17 +359,20 @@ class Scroller {
     activatedElement = element;
   }
 
+  getActivatedElement() {
+    if (!activatedElement) {
+      activatedElement =
+        (getScrollingElement() && firstScrollableElement()) ||
+        getScrollingElement();
+    }
+    return activatedElement;
+  }
+
   // scroll the active element in :direction by :amount * :factor.
   // :factor is needed because :amount can take on string values, which scrollBy converts to element
   // dimensions.
   scrollBy(direction, amount, factor, continuous) {
     // if this is called before domReady, just use the window scroll function
-    if (factor == null) {
-      factor = 1;
-    }
-    if (continuous == null) {
-      continuous = true;
-    }
     if (!getScrollingElement() && amount instanceof Number) {
       console.debug("window scroll");
       if (direction === "x") {
@@ -381,37 +383,34 @@ class Scroller {
       return;
     }
 
-    if (!activatedElement) {
-      activatedElement =
-        (getScrollingElement() && firstScrollableElement()) ||
-        getScrollingElement();
-    }
-    if (!activatedElement) {
+    const activeElement = this.getActivatedElement();
+    if (!activeElement) {
       return;
     }
 
     const element = findScrollableElement(
-      activatedElement,
+      activeElement,
       direction,
       amount,
       factor,
     );
     const elementAmount = factor * getDimension(element, direction, amount);
-    console.debug("Scroll element", activatedElement, element);
+    console.debug("Scroll element", activeElement, element);
     return CoreScroller.scroll(element, direction, elementAmount, continuous);
   }
 
   scrollTo(direction, pos) {
-    if (!activatedElement) {
-      activatedElement =
+    const activeElement = this.getActivatedElement();
+    if (!activeElement) {
+      activeElement =
         (getScrollingElement() && firstScrollableElement()) ||
         getScrollingElement();
     }
-    if (!activatedElement) {
+    if (!activeElement) {
       return;
     }
 
-    const element = findScrollableElement(activatedElement, direction, pos, 1);
+    const element = findScrollableElement(activeElement, direction, pos, 1);
     const amount =
       getDimension(element, direction, pos) -
       element[scrollProperties[direction].axisName];
@@ -428,12 +427,7 @@ class Scroller {
     state.cancelAndReset();
     state.direction = direction;
     state.amount = amount;
-    state.scrollId = setTimeout(
-      (_this) =>
-        _this.scrollBy(_this.#state.direction, _this.#state.amount, 0.5, true),
-      200,
-      this,
-    );
+    this.scrollBy(direction, amount, 0.5, true);
   }
 
   stop() {

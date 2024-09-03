@@ -58,6 +58,10 @@ class EdgeGestures {
     addEventListener("pagehide", this.#cancelIfScrolling.bind(this));
     addEventListener("hashchange", this.#cancelIfScrolling.bind(this));
     addEventListener("scroll", this.#onScroll.bind(this));
+    document.documentElement.addEventListener(
+      "mouseleave",
+      this.#cancelIfScrolling.bind(this),
+    );
     this.toggle();
   }
 
@@ -82,7 +86,8 @@ class EdgeGestures {
     activeArea.render();
   }
 
-  #cancelIfScrolling() {
+  #cancelIfScrolling(event) {
+    console.debug("EdgeGestures cancelIfScrolling", event);
     if (this.#activeArea) {
       Canvas.destroy(this.#activeArea.canvas);
       this.#activeArea = null;
