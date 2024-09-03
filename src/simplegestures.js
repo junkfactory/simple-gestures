@@ -1,3 +1,25 @@
+// The MIT License (MIT)
+// ----------------------------------------------
+//
+// Copyright © 2024 junkfactory@gmail.com
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of
+// this software and associated documentation files (the “Software”), to deal in
+// the Software without restriction, including without limitation the rights to use,
+// copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+// Software, and to permit persons to whom the Software is furnished to do so,
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+// A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+// COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+// ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
+// THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 const PI = 3.141592653589793;
 
 const Actions = {
@@ -23,10 +45,12 @@ class Config {
     width: 2,
   };
   rockerEnabled = true;
+  edgeScrollEnabled = false;
   gestures = {};
   actionMap = {};
   update(config) {
     this.rockerEnabled = Boolean(config.rockerEnabled);
+    this.edgeScrollEnabled = Boolean(config.edgeScrollEnabled);
     this.trail.enabled = Boolean(config.trailEnabled);
     this.trail.color = config.trailColor;
     this.trail.width = config.trailWidth;
@@ -47,8 +71,8 @@ class SimpleGesture {
   #canvas;
   #dom;
 
-  constructor() {
-    this.config = new Config();
+  constructor(config) {
+    this.config = config;
     this.#coords = new Coords();
     this.#canvas = new Canvas(this.config);
     this.#dom = new Dom();
@@ -189,5 +213,9 @@ class SimpleGesture {
   }
 }
 
-const mouseHandler = new MouseHandler(new SimpleGesture());
+const config = new Config();
+const mouseHandler = new MouseHandler({
+  gesture: new SimpleGesture(config),
+  edgeGesture: new EdgeGestures(config),
+});
 mouseHandler.install(document);

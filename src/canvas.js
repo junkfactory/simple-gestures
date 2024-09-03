@@ -21,29 +21,54 @@
 // THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 class Canvas {
-  #id = "canvas";
+  #canvas = null;
   #config;
 
   constructor(config) {
     this.#config = config;
   }
 
-  get instance() {
-    return $("#" + this.#id);
+  static create(id, { x, y, width, height }) {
+    const canvas = document.createElement("canvas");
+    canvas.id = id;
+    canvas.style.width = width;
+    canvas.width = width;
+    canvas.style.height = height;
+    canvas.height = height;
+    canvas.style.left = x + "px";
+    canvas.style.top = y + "px";
+    canvas.style.overflow = "visible";
+    canvas.style.position = "absolute";
+    canvas.style.zIndex = "10000";
+    document.body.appendChild(canvas);
+    return canvas;
+  }
+
+  static destroy(canvas) {
+    if (canvas) {
+      try {
+        document.body.removeChild(canvas);
+      } catch (error) {}
+    }
   }
 
   create() {
-    let canvas = this.instance;
+    const vw = window.visualViewport.width - window.screenX;
+    const vh = window.visualViewport.height - window.screenY;
+
+    const canvas_top = window.visualViewport.pageTop;
+
+    let canvas = this.#canvas;
     if (!canvas) {
-      canvas = document.createElement("canvas");
-      canvas.id = this.#id;
-      document.body.appendChild(canvas);
+      this.#canvas = Canvas.create("simplegesture", {
+        x: 0,
+        y: canvas_top,
+        width: vw,
+        height: vh,
+      });
+      return;
     }
 
-    let vw = window.visualViewport.width - window.screenX;
-    let vh = window.visualViewport.height - window.screenY;
-
-    const canvas_top = window.visualViewport.pageTop + "px";
     canvas.style.width = vw;
     canvas.width = vw;
     canvas.style.height = vh;
@@ -56,7 +81,7 @@ class Canvas {
   }
 
   draw({ move, line }) {
-    const canvas = this.instance;
+    const canvas = this.#canvas;
     if (canvas) {
       const canvas_top = canvas.style.top.replace("px", "");
       const ctx = canvas.getContext("2d");
@@ -73,11 +98,10 @@ class Canvas {
   }
 
   destroy() {
-    const canvas = this.instance;
+    const canvas = this.#canvas;
     if (canvas) {
-      try {
-        document.body.removeChild(canvas);
-      } catch (error) {}
+      Canvas.destroy(canvas);
+      this.#canvas = null;
     } else {
       console.info("Canvas not found to destroy");
     }

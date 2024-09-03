@@ -205,6 +205,7 @@ async function saveConfiguration(e) {
   config.trailEnabled = trail.checked;
 
   config.rockerEnabled = $("#rockerEnabled").checked;
+  config.edgeScrollEnabled = $("#edgeScrollEnabled").checked;
 
   let disabled_domains = config?.disabled_domains || [];
   const domainUrl = $("#domain_url").innerHTML;
@@ -277,8 +278,8 @@ function restoreOptions() {
     const trailEnabled = $("#trail");
     trailEnabled.checked = config.trailEnabled;
 
-    const rockerEnabled = $("#rockerEnabled");
-    rockerEnabled.checked = config.rockerEnabled;
+    $("#rockerEnabled").checked = config.rockerEnabled;
+    $("#edgeScrollEnabled").checked = config.edgeScrollEnabled;
 
     let select = $("#color");
     let value = colorCodeToName[config.trailColor];
