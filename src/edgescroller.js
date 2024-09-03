@@ -74,7 +74,7 @@ const arrow = (id, { x, y, width, height }) => {
   return canvas;
 };
 
-class EdgeGestures {
+class EdgeScroller {
   #config;
   #threshold = 0.1;
   #scroller = new Scroller();
@@ -113,7 +113,7 @@ class EdgeGestures {
   }
 
   #cancelIfScrolling(event) {
-    console.debug("EdgeGestures cancelIfScrolling", event);
+    console.debug("EdgeScroller cancelIfScrolling", event);
     if (this.#activeArea) {
       Canvas.destroy(this.#activeArea.canvas);
       this.#activeArea = null;

@@ -216,6 +216,6 @@ class SimpleGesture {
 const config = new Config();
 const mouseHandler = new MouseHandler({
   gesture: new SimpleGesture(config),
-  edgeGesture: new EdgeGestures(config),
+  edgeScroller: new EdgeScroller(config),
 });
 mouseHandler.install(document);
