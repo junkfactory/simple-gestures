@@ -427,7 +427,9 @@ class Scroller {
     state.cancelAndReset();
     state.direction = direction;
     state.amount = amount;
-    this.scrollBy(direction, amount, 0.5, true);
+    Math.abs(amount) == 0
+      ? this.scrollTo(direction, amount)
+      : this.scrollBy(direction, amount, 0.5, true);
   }
 
   stop() {
