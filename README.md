@@ -19,7 +19,10 @@ This is a merged repo of:
 1. Edge scrolling - position mouse pointer on edges to scroll up/down/left/right.
    Enable/Disable in Options -> Extras -> Enable edge scrolling
 
-See v0.1 in action at [YouTube](https://youtu.be/OOZXeHznJSU)
+### Demos
+
+- v0.1 in action at [YouTube](https://youtu.be/OOZXeHznJSU)
+- v1.0.3+ [Edge Scrolling](https://youtu.be/RdV8TyFOG28?si=50vTbDTr26fykPry)
 
 ## Shout outs
 
