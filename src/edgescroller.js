@@ -31,21 +31,20 @@ const Direction = {
 const STEP = 10;
 
 const calculateJump = ({ pos, max, direction, threshold }) => {
-  const area = Math.ceil(threshold / 3);
   if (direction === Direction.TOP || direction === Direction.LEFT) {
     if (pos < 10) {
       return 0;
     }
-    if (pos < max + area) {
+    if (pos < max + 35) {
       return STEP << 3;
     }
     return STEP << 1;
   }
   //bottom or right
-  if (pos > max + threshold - 10) {
+  if (pos > max - 10) {
     return "max";
   }
-  if (pos > max + area * 2) {
+  if (pos > max - 35) {
     return STEP << 3;
   }
   return STEP << 1;
@@ -82,7 +81,7 @@ const arrow = (id, { x, y, width, height }) => {
 
 class EdgeScroller {
   #config;
-  #threshold = 0.1;
+  #threshold = 0.05;
   #scroller = new Scroller();
   #activeArea = null;
 
@@ -178,7 +177,7 @@ class EdgeScroller {
       });
       const jump = calculateJump({
         pos: y,
-        max: vh - thresholdValue,
+        max: window.visualViewport.height,
         threshold: thresholdValue,
         direction: Direction.BOTTOM,
       });
