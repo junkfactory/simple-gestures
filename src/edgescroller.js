@@ -31,18 +31,24 @@ const Direction = {
 const STEP = 10;
 
 const calculateJump = ({ pos, max, direction, threshold }) => {
-  const area = Math.ceil(threshold / 2);
+  const area = Math.ceil(threshold / 3);
   if (direction === Direction.TOP || direction === Direction.LEFT) {
+    if (pos < 10) {
+      return 0;
+    }
     if (pos < max + area) {
       return STEP << 3;
     }
     return STEP << 1;
-  } else {
-    if (pos > max + area) {
-      return STEP << 3;
-    }
-    return STEP << 1;
   }
+  //bottom or right
+  if (pos > max + threshold - 10) {
+    return "max";
+  }
+  if (pos > max + area * 2) {
+    return STEP << 3;
+  }
+  return STEP << 1;
 };
 
 const arrow = (id, { x, y, width, height }) => {
