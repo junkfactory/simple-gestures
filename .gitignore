@@ -4,3 +4,4 @@
 *.pem
 *.crx
 manifest.json
+.jj
