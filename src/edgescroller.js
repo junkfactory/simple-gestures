@@ -29,6 +29,7 @@ const Direction = {
 };
 
 const STEP = 10;
+const SCROLL_DELAY_MS = 3000;
 
 const calculateJump = ({ pos, max, direction, threshold }) => {
   if (direction === Direction.TOP || direction === Direction.LEFT) {
@@ -84,6 +85,7 @@ class EdgeScroller {
   #threshold = 0.05;
   #scroller = new Scroller();
   #activeArea = null;
+  #scrollTimer = null;
 
   constructor(config) {
     this.#config = config;
@@ -119,6 +121,10 @@ class EdgeScroller {
 
   #cancelIfScrolling(event) {
     console.debug("EdgeScroller cancelIfScrolling", event);
+    if (this.#scrollTimer) {
+      clearTimeout(this.#scrollTimer);
+      this.#scrollTimer = null;
+    }
     if (this.#activeArea) {
       Canvas.destroy(this.#activeArea.canvas);
       this.#activeArea = null;
@@ -151,50 +157,66 @@ class EdgeScroller {
     };
 
     if (edgeArea.top) {
-      this.#createActiveArea("topArea", {
-        x: () => 0,
-        y: () => window.visualViewport.pageTop,
-        width: vw,
-        height: 10,
-      });
-      const jump = calculateJump({
-        pos: y,
-        max: 0,
-        threshold: thresholdValue,
-        direction: Direction.TOP,
-      });
-      this.#scroller.start({
-        direction: "y",
-        amount: -jump,
-      });
+      if (this.#scrollTimer) return;
+      this.#scrollTimer = setTimeout(() => {
+        this.#createActiveArea("topArea", {
+          x: () => 0,
+          y: () => window.visualViewport.pageTop,
+          width: vw,
+          height: 10,
+        });
+        const jump = calculateJump({
+          pos: y,
+          max: 0,
+          threshold: thresholdValue,
+          direction: Direction.TOP,
+        });
+        this.#scroller.start({
+          direction: "y",
+          amount: -jump,
+        });
+      }, SCROLL_DELAY_MS);
     } else if (edgeArea.bottom) {
-      this.#createActiveArea("bottomArea", {
-        x: () => 0,
-        y: () =>
-          window.visualViewport.pageTop + window.visualViewport.height - 10,
-        width: vw,
-        height: 10,
-      });
-      const jump = calculateJump({
-        pos: y,
-        max: window.visualViewport.height,
-        threshold: thresholdValue,
-        direction: Direction.BOTTOM,
-      });
-      this.#scroller.start({
-        direction: "y",
-        amount: jump,
-      });
+      if (this.#scrollTimer) return;
+      this.#scrollTimer = setTimeout(() => {
+        this.#createActiveArea("bottomArea", {
+          x: () => 0,
+          y: () =>
+            window.visualViewport.pageTop + window.visualViewport.height - 10,
+          width: vw,
+          height: 10,
+        });
+        const jump = calculateJump({
+          pos: y,
+          max: window.visualViewport.height,
+          threshold: thresholdValue,
+          direction: Direction.BOTTOM,
+        });
+        this.#scroller.start({
+          direction: "y",
+          amount: jump,
+        });
+      }, SCROLL_DELAY_MS);
     } else if (edgeArea.right) {
-      this.#scroller.start({
-        direction: "x",
-        amount: STEP,
-      });
+      if (this.#scrollTimer) return;
+      this.#scrollTimer = setTimeout(
+        () =>
+          this.#scroller.start({
+            direction: "x",
+            amount: STEP,
+          }),
+        SCROLL_DELAY_MS,
+      );
     } else if (edgeArea.left) {
-      this.#scroller.start({
-        direction: "x",
-        amount: -STEP,
-      });
+      if (this.#scrollTimer) return;
+      this.#scrollTimer = setTimeout(
+        () =>
+          this.#scroller.start({
+            direction: "x",
+            amount: -STEP,
+          }),
+        SCROLL_DELAY_MS,
+      );
     } else {
       this.#cancelIfScrolling(event);
     }
