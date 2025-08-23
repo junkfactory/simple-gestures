@@ -29,7 +29,6 @@ const Direction = {
 };
 
 const STEP = 10;
-const SCROLL_DELAY_MS = 3000;
 
 const calculateJump = ({ pos, max, direction, threshold }) => {
   if (direction === Direction.TOP || direction === Direction.LEFT) {
@@ -175,7 +174,7 @@ class EdgeScroller {
           direction: "y",
           amount: -jump,
         });
-      }, SCROLL_DELAY_MS);
+      }, this.#config.edgeScrollDelay);
     } else if (edgeArea.bottom) {
       if (this.#scrollTimer) return;
       this.#scrollTimer = setTimeout(() => {
@@ -196,7 +195,7 @@ class EdgeScroller {
           direction: "y",
           amount: jump,
         });
-      }, SCROLL_DELAY_MS);
+      }, this.#config.edgeScrollDelay);
     } else if (edgeArea.right) {
       if (this.#scrollTimer) return;
       this.#scrollTimer = setTimeout(
@@ -205,7 +204,7 @@ class EdgeScroller {
             direction: "x",
             amount: STEP,
           }),
-        SCROLL_DELAY_MS,
+        this.#config.edgeScrollDelay,
       );
     } else if (edgeArea.left) {
       if (this.#scrollTimer) return;
@@ -215,7 +214,7 @@ class EdgeScroller {
             direction: "x",
             amount: -STEP,
           }),
-        SCROLL_DELAY_MS,
+        this.#config.edgeScrollDelay,
       );
     } else {
       this.#cancelIfScrolling(event);

@@ -182,6 +182,11 @@ function validateConfiguration(optionForm) {
   return status.innerHTML == "";
 }
 
+function toggleDelayVisibility() {
+  const enabled = $("#edgeScrollEnabled").checked;
+  $("#edgeScrollDelayContainer").style.display = enabled ? "block" : "none";
+}
+
 // Saves options to local storage.
 async function saveConfiguration(e) {
   e.preventDefault();
@@ -206,6 +211,7 @@ async function saveConfiguration(e) {
 
   config.rockerEnabled = $("#rockerEnabled").checked;
   config.edgeScrollEnabled = $("#edgeScrollEnabled").checked;
+  config.edgeScrollDelay = $("#edgeScrollDelay").value || DEFAULT_SCROLL_DELAY_MS;
 
   let disabled_domains = config?.disabled_domains || [];
   const domainUrl = $("#domain_url").innerHTML;
@@ -280,6 +286,7 @@ function restoreOptions() {
 
     $("#rockerEnabled").checked = config.rockerEnabled;
     $("#edgeScrollEnabled").checked = config.edgeScrollEnabled;
+    $("#edgeScrollDelay").value = config.edgeScrollDelay || DEFAULT_SCROLL_DELAY_MS;
 
     let select = $("#color");
     let value = colorCodeToName[config.trailColor];
@@ -318,6 +325,7 @@ function restoreOptions() {
       }
       createOptions(config);
       extensionToggle({ target: domainCheckbox });
+      toggleDelayVisibility();
     });
 
     //set extra options
@@ -375,4 +383,5 @@ $().addEventListener("DOMContentLoaded", function () {
   });
   $("#domain").addEventListener("click", extensionToggle);
   $("#grantPermissions").addEventListener("click", grantPermissions);
+  $("#edgeScrollEnabled").addEventListener("change", toggleDelayVisibility);
 });

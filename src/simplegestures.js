@@ -46,11 +46,13 @@ class Config {
   };
   rockerEnabled = true;
   edgeScrollEnabled = false;
+  edgeScrollDelay = DEFAULT_SCROLL_DELAY_MS;
   gestures = {};
   actionMap = {};
   update(config) {
     this.rockerEnabled = Boolean(config.rockerEnabled);
     this.edgeScrollEnabled = Boolean(config.edgeScrollEnabled);
+    this.edgeScrollDelay = config.edgeScrollDelay || DEFAULT_SCROLL_DELAY_MS;
     this.trail.enabled = Boolean(config.trailEnabled);
     this.trail.color = config.trailColor;
     this.trail.width = config.trailWidth;
